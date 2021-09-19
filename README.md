@@ -1,2 +1,1 @@
-# Otus-spring-2021-08-homework-quiz
-Программа по проведению тестирования студентов
+# Otus-spring-2021-08-homework
