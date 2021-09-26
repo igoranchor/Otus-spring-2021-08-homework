@@ -1,31 +1,24 @@
 package ru.otus.quiz.service;
 
-import ru.otus.quiz.dao.QuestionDao;
-import ru.otus.quiz.domain.Question;
+import org.springframework.stereotype.Service;
 
-import java.util.List;
-
+@Service
 public class QuizService {
 
-    private final QuestionDao questionDao;
+    private final WelcomeService welcomeService;
+    private final AskingService askingService;
+    private final GradeService gradeService;
 
-    public QuizService(QuestionDao questionDao) {
-        this.questionDao = questionDao;
+    public QuizService(WelcomeService welcomeService, AskingService askingService, GradeService gradeService) {
+        this.welcomeService = welcomeService;
+        this.askingService = askingService;
+        this.gradeService = gradeService;
     }
 
     public void runQuiz() {
-        List<Question> questions;
-        questions = questionDao.getQuestions();
-        for (Question question : questions) {
-            printQuestion(question);
-        }
-    }
-
-    private void printQuestion(Question question) {
-        System.out.println("---->>");
-        System.out.println(String.format("Question # %d: %s", question.getSerialNumber(), question.getQuestion()));
-        System.out.println(String.format("Answers: %s", question.getAnswers()));
-        System.out.println("----<<");
+        var student = welcomeService.welcome();
+        var countCorrectAnswers = askingService.runAsk();
+        gradeService.runGrade(student, countCorrectAnswers);
     }
 
 }
