@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.otus.quiz.component.InputOutputComponent;
 import ru.otus.quiz.config.properties.GradeProperties;
 import ru.otus.quiz.domain.Student;
+import ru.otus.quiz.messages.GradeMessages;
 import ru.otus.quiz.service.impl.CountCorrectAnswersGradeService;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +32,9 @@ class CountCorrectAnswersGradeServiceTest {
     @Mock
     private GradeProperties gradeProperties;
 
+    @Mock
+    private GradeMessages gradeMessages;
+
     @Captor
     private ArgumentCaptor<String> gradeMessageCaptor;
 
@@ -39,7 +43,7 @@ class CountCorrectAnswersGradeServiceTest {
     void successTesting() {
         var student = prepareStudent();
         CountCorrectAnswersGradeService service = prepareService();
-        doReturn(SUCCESS_MESSAGE).when(gradeProperties).getSuccessMessage();
+        doReturn(SUCCESS_MESSAGE).when(gradeMessages).getSuccessMessage();
 
         service.runGrade(student, QUANTITY_CORRECT_ANSWERS_FOR_SUCCESS);
 
@@ -52,7 +56,7 @@ class CountCorrectAnswersGradeServiceTest {
     void failTesting() {
         var student = prepareStudent();
         CountCorrectAnswersGradeService service = prepareService();
-        doReturn(FAIL_MESSAGE).when(gradeProperties).getFailMessage();
+        doReturn(FAIL_MESSAGE).when(gradeMessages).getFailMessage();
 
         service.runGrade(student, QUANTITY_CORRECT_ANSWERS_FOR_FAIL);
 
@@ -65,7 +69,7 @@ class CountCorrectAnswersGradeServiceTest {
 
         doNothing().when(inputOutputComponent).write(anyString());
 
-        return new CountCorrectAnswersGradeService(inputOutputComponent, gradeProperties);
+        return new CountCorrectAnswersGradeService(inputOutputComponent, gradeProperties, gradeMessages);
     }
 
     private Student prepareStudent() {
