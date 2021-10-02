@@ -9,6 +9,7 @@ import ru.otus.quiz.component.InputOutputComponent;
 import ru.otus.quiz.config.properties.AskingProperties;
 import ru.otus.quiz.dao.QuestionDao;
 import ru.otus.quiz.domain.Question;
+import ru.otus.quiz.service.impl.QuestionAskingService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +104,7 @@ class AskingServiceTest {
                 INDEX_ANSWER_MESSAGE, OUTRO_MESSAGE), askingMessageCaptor.getAllValues());
     }
 
-    private AskingService prepareService() {
+    private QuestionAskingService prepareService() {
         doReturn(prepareQuestions()).when(questionDao).getQuestions();
 
         doReturn(INTRO_MESSAGE).when(askingProperties).getQuestionIntro();
@@ -114,7 +115,7 @@ class AskingServiceTest {
 
         doNothing().when(inputOutputComponent).write(anyString());
 
-        return new AskingService(questionDao, inputOutputComponent, askingProperties);
+        return new QuestionAskingService(questionDao, inputOutputComponent, askingProperties);
     }
 
     private List<Question> prepareQuestions() {

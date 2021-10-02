@@ -8,13 +8,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.otus.quiz.component.InputOutputComponent;
 import ru.otus.quiz.config.properties.GradeProperties;
 import ru.otus.quiz.domain.Student;
+import ru.otus.quiz.service.impl.CountCorrectAnswersGradeService;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class GradeServiceTest {
+class CountCorrectAnswersGradeServiceTest {
 
     private static final String FIRST_NAME = "Сергей";
     private static final String LAST_NAME = "Иванов";
@@ -37,7 +38,7 @@ class GradeServiceTest {
     @DisplayName("Студент ответил на необходимое количество вопросов - успех")
     void successTesting() {
         var student = prepareStudent();
-        GradeService service = prepareService();
+        CountCorrectAnswersGradeService service = prepareService();
         doReturn(SUCCESS_MESSAGE).when(gradeProperties).getSuccessMessage();
 
         service.runGrade(student, QUANTITY_CORRECT_ANSWERS_FOR_SUCCESS);
@@ -50,7 +51,7 @@ class GradeServiceTest {
     @DisplayName("Студент не ответил на необходимое количество вопросов - провал")
     void failTesting() {
         var student = prepareStudent();
-        GradeService service = prepareService();
+        CountCorrectAnswersGradeService service = prepareService();
         doReturn(FAIL_MESSAGE).when(gradeProperties).getFailMessage();
 
         service.runGrade(student, QUANTITY_CORRECT_ANSWERS_FOR_FAIL);
@@ -59,12 +60,12 @@ class GradeServiceTest {
         assertTrue(gradeMessageCaptor.getValue().contains(FAIL_MESSAGE));
     }
 
-    private GradeService prepareService() {
+    private CountCorrectAnswersGradeService prepareService() {
         doReturn(MIN_QUANTITY_CORRECT_ANSWERS_FOR_APPROVE).when(gradeProperties).getMinQuantityCorrectAnswersForApprove();
 
         doNothing().when(inputOutputComponent).write(anyString());
 
-        return new GradeService(inputOutputComponent, gradeProperties);
+        return new CountCorrectAnswersGradeService(inputOutputComponent, gradeProperties);
     }
 
     private Student prepareStudent() {
