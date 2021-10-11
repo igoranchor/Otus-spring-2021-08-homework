@@ -6,9 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.otus.quiz.component.InputOutputComponent;
-import ru.otus.quiz.config.properties.AskingProperties;
+import ru.otus.quiz.messages.AskingMessages;
 import ru.otus.quiz.dao.QuestionDao;
 import ru.otus.quiz.domain.Question;
+import ru.otus.quiz.service.impl.QuestionAskingService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ class AskingServiceTest {
     private InputOutputComponent inputOutputComponent;
 
     @Mock
-    private AskingProperties askingProperties;
+    private AskingMessages askingMessages;
 
     @Captor
     private ArgumentCaptor<String> askingMessageCaptor;
@@ -74,7 +75,7 @@ class AskingServiceTest {
     void correctAnswerWithIncorrectInput() {
         var service = prepareService();
         when(inputOutputComponent.read()).thenReturn("incorrect_input").thenReturn("2");
-        doReturn(MISMATCH_ERROR_MESSAGE).when(askingProperties).getMismatchErrorMessage();
+        doReturn(MISMATCH_ERROR_MESSAGE).when(askingMessages).getMismatchErrorMessage();
 
         var countCorrectAnswers = service.runAsk();
 
@@ -91,7 +92,7 @@ class AskingServiceTest {
     void incorrectAnswerWithIncorrectInput() {
         var service = prepareService();
         when(inputOutputComponent.read()).thenReturn("incorrect_input").thenReturn("1");
-        doReturn(MISMATCH_ERROR_MESSAGE).when(askingProperties).getMismatchErrorMessage();
+        doReturn(MISMATCH_ERROR_MESSAGE).when(askingMessages).getMismatchErrorMessage();
 
         var countCorrectAnswers = service.runAsk();
 
@@ -103,18 +104,18 @@ class AskingServiceTest {
                 INDEX_ANSWER_MESSAGE, OUTRO_MESSAGE), askingMessageCaptor.getAllValues());
     }
 
-    private AskingService prepareService() {
+    private QuestionAskingService prepareService() {
         doReturn(prepareQuestions()).when(questionDao).getQuestions();
 
-        doReturn(INTRO_MESSAGE).when(askingProperties).getQuestionIntro();
-        doReturn(OUTRO_MESSAGE).when(askingProperties).getQuestionOutro();
-        doReturn(QUESTION_MESSAGE).when(askingProperties).getQuestionMessage();
-        doReturn(ANSWERS_MESSAGE).when(askingProperties).getQuestionAnswersMessage();
-        doReturn(INDEX_ANSWER_MESSAGE).when(askingProperties).getQuestionIndexAnswerMessage();
+        doReturn(INTRO_MESSAGE).when(askingMessages).getQuestionIntro();
+        doReturn(OUTRO_MESSAGE).when(askingMessages).getQuestionOutro();
+        doReturn(QUESTION_MESSAGE).when(askingMessages).getQuestionMessage();
+        doReturn(ANSWERS_MESSAGE).when(askingMessages).getQuestionAnswersMessage();
+        doReturn(INDEX_ANSWER_MESSAGE).when(askingMessages).getQuestionIndexAnswerMessage();
 
         doNothing().when(inputOutputComponent).write(anyString());
 
-        return new AskingService(questionDao, inputOutputComponent, askingProperties);
+        return new QuestionAskingService(questionDao, inputOutputComponent, askingMessages);
     }
 
     private List<Question> prepareQuestions() {

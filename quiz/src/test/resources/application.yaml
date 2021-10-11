@@ -1,0 +1,6 @@
+spring:
+  messages:
+    basename: i18n/messages, i18n/question-source
+quiz:
+  application.language: en-EN
+  grade.min-quantity-correct-answers-for-approve: 2
