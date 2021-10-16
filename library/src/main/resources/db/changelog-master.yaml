@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      relativeToChangelogFile: true
+      file: "changelogs/genres.yaml"
+  - include:
+      relativeToChangelogFile: true
+      file: "changelogs/authors.yaml"
+  - include:
+      relativeToChangelogFile: true
+      file: "changelogs/books.yaml"
+  - include:
+      relativeToChangelogFile: true
+      file: "sql/data.sql"

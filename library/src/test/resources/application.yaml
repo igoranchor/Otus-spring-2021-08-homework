@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: library
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    changeLog: "classpath:/db/changelog-master.yaml"
+  shell:
+    interactive:
+      enabled: false

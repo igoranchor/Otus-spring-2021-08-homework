@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: authors_16_10_2021
+      author: a.yatskevich
+      changes:
+        - createSequence:
+            sequenceName: s_authors
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: authors_pk
+                  name: id
+                  type: number
+                  remarks: Первичный ключ
+                  defaultValueSequenceNext: s_authors
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(128)
+                  remarks: Имя автора
+            tableName: authors
+            remarks: Авторы книг
+        - createIndex:
+            columns:
+              - column:
+                  name: name
+            indexName: authors_u1
+            tableName: authors
+            unique: true

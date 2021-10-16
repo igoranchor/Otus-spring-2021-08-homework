@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: genres_16_10_2021
+      author: a.yatskevich
+      changes:
+        - createSequence:
+            sequenceName: s_books
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: books_pk
+                  name: id
+                  type: number
+                  remarks: Первичный ключ
+                  defaultValueSequenceNext: s_books
+              - column:
+                  constraints:
+                    nullable: false
+                  name: title
+                  type: varchar(128)
+                  remarks: Назание книги
+              - column:
+                  constraints:
+                    nullable: false
+                  name: genre_id
+                  type: number
+                  remarks: Идентификатор автора книги
+              - column:
+                  constraints:
+                    nullable: false
+                  name: author_id
+                  type: number
+                  remarks: Идентификатор жанра книги
+            tableName: books
+            remarks: Книжные жанры
+        - createIndex:
+            columns:
+              - column:
+                  name: title
+            indexName: books_u1
+            tableName: books
+            unique: true
+        - addForeignKeyConstraint:
+            constraintName: books_fk1
+            baseColumnNames: genre_id
+            baseTableName: books
+            referencedColumnNames: id
+            referencedTableName: genres
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+        - addForeignKeyConstraint:
+            constraintName: books_fk2
+            baseColumnNames: author_id
+            baseTableName: books
+            referencedColumnNames: id
+            referencedTableName: authors
+            onDelete: CASCADE
+            onUpdate: RESTRICT
