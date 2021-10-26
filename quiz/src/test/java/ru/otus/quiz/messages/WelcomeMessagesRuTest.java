@@ -2,15 +2,15 @@ package ru.otus.quiz.messages;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.*;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.test.context.TestPropertySource;
 import ru.otus.quiz.component.InternationalizeComponent;
-import ru.otus.quiz.dao.QuestionDao;
+import ru.otus.quiz.config.properties.ApplicationProperties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -18,23 +18,25 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
-@ContextConfiguration(initializers = {WelcomeMessagesRuTest.Initializer.class})
+@EnableConfigurationProperties
+@TestPropertySource(properties = "quiz.application.language=ru-RU")
 class WelcomeMessagesRuTest {
 
-    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "quiz.application.language=ru-RU"
-            ).applyTo(configurableApplicationContext.getEnvironment());
+    @Import({ApplicationProperties.class,
+            WelcomeMessages.class})
+    @Configuration
+    static class TestConfiguration {
+        @Bean
+        public MessageSource messageSource() {
+            ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+            source.setBasenames("i18n/messages", "i18n/question-source");
+            source.setDefaultEncoding("UTF-8");
+            return source;
         }
     }
 
     @Autowired
     private WelcomeMessages welcomeMessages;
-
-    @MockBean
-    @SuppressWarnings("unused")
-    private QuestionDao questionDao;
 
     @SpyBean
     private InternationalizeComponent internationalizeComponent;

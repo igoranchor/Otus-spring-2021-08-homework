@@ -52,14 +52,13 @@ class QuizServiceTest {
     @Test
     void testSuccess() {
         when(questionDao.getQuestions()).thenReturn(prepareQuestions());
-        when(inputOutputComponent.read()).thenReturn(STUDENT_FIRST_NAME).thenReturn(STUDENT_LAST_NAME)
-                .thenReturn("2").thenReturn("2");
-        quizService.runQuiz();
+        when(inputOutputComponent.read()).thenReturn("2").thenReturn("2");
+        quizService.runQuiz(new Student(STUDENT_FIRST_NAME, STUDENT_LAST_NAME));
 
-        verify(inputOutputComponent, times(4)).read();
-        verify(inputOutputComponent, times(15)).write(anyString());
-        verify(internationalizeComponent, times(15)).internationalize(anyString());
-        verify(welcomeService, times(1)).welcome();
+        verify(inputOutputComponent, times(2)).read();
+        verify(inputOutputComponent, times(11)).write(anyString());
+        verify(internationalizeComponent, times(11)).internationalize(anyString());
+        verify(welcomeService, times(0)).welcome();
         verify(askingService, times(1)).runAsk();
         verify(gradeService, times(1)).runGrade(studentArgumentCaptor.capture(), eq(2));
         assertEquals(STUDENT_FIRST_NAME, studentArgumentCaptor.getValue().getFirstName());
@@ -69,14 +68,13 @@ class QuizServiceTest {
     @Test
     void testFail() {
         when(questionDao.getQuestions()).thenReturn(prepareQuestions());
-        when(inputOutputComponent.read()).thenReturn(STUDENT_FIRST_NAME).thenReturn(STUDENT_LAST_NAME)
-                .thenReturn("2").thenReturn("1");
-        quizService.runQuiz();
+        when(inputOutputComponent.read()).thenReturn("2").thenReturn("1");
+        quizService.runQuiz(new Student(STUDENT_FIRST_NAME, STUDENT_LAST_NAME));
 
-        verify(inputOutputComponent, times(4)).read();
-        verify(inputOutputComponent, times(15)).write(anyString());
-        verify(internationalizeComponent, times(15)).internationalize(anyString());
-        verify(welcomeService, times(1)).welcome();
+        verify(inputOutputComponent, times(2)).read();
+        verify(inputOutputComponent, times(11)).write(anyString());
+        verify(internationalizeComponent, times(11)).internationalize(anyString());
+        verify(welcomeService, times(0)).welcome();
         verify(askingService, times(1)).runAsk();
         verify(gradeService, times(1)).runGrade(studentArgumentCaptor.capture(), eq(1));
         assertEquals(STUDENT_FIRST_NAME, studentArgumentCaptor.getValue().getFirstName());

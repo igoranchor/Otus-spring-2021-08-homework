@@ -11,7 +11,7 @@
     </parent>
     <groupId>ru.otus.quiz</groupId>
     <artifactId>quiz</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -19,6 +19,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <spring.version>5.3.9</spring.version>
+        <spring.shell.version>2.0.1.RELEASE</spring.shell.version>
         <mvn.plugins.version>3.2.0</mvn.plugins.version>
         <junit.jupiter.version>5.8.1</junit.jupiter.version>
         <assertj.version>3.21.0</assertj.version>
@@ -43,6 +44,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.shell</groupId>
+            <artifactId>spring-shell-starter</artifactId>
+            <version>${spring.shell.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
