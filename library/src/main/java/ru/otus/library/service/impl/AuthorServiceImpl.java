@@ -1,33 +1,33 @@
 package ru.otus.library.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.otus.library.component.InputOutputComponent;
 import ru.otus.library.dao.AuthorDao;
 import ru.otus.library.domain.Author;
 import ru.otus.library.service.AuthorService;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
 
     private final AuthorDao dao;
     private final InputOutputComponent component;
 
-    public AuthorServiceImpl(AuthorDao dao, InputOutputComponent component) {
-        this.dao = dao;
-        this.component = component;
-    }
-
     @Override
+    @Transactional
     public Author create(String name) {
-        var existsAuthor = dao.getByName(name);
-        if (Objects.nonNull(existsAuthor)) {
+        var existsAuthor = dao.findByName(name);
+        if (existsAuthor.isPresent()) {
             component.write("Author \"" + name + "\" already exists. Return exists author.");
-            return existsAuthor;
+            return existsAuthor.get();
         } else {
-            var author = dao.insert(new Author(name));
+            var author = dao.save(new Author(name));
             component.write("Author \"" + name + "\" successfully created.");
             return author;
         }
@@ -35,7 +35,7 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public List<Author> readAll() {
-        var authors = dao.getAll();
+        var authors = dao.findAll();
         if (authors.isEmpty()) {
             component.write("Authors are not found");
         }
@@ -43,29 +43,32 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
-    public Author readById(long id) {
-        var existsAuthor = dao.getById(id);
-        if (Objects.isNull(existsAuthor)) {
+    public Author readById(BigInteger id) {
+        var existsAuthor = dao.findById(id);
+        if (existsAuthor.isEmpty()) {
             component.write("Author with ID \"" + id + "\" does not exist. Return null.");
+            return null;
         }
-        return existsAuthor;
+        return existsAuthor.get();
     }
 
     @Override
     public Author readByName(String name) {
-        var existsAuthor = dao.getByName(name);
-        if (Objects.isNull(existsAuthor)) {
+        var existsAuthor = dao.findByName(name);
+        if (existsAuthor.isEmpty()) {
             component.write("Author \"" + name + "\" does not exist. Return null.");
+            return null;
         }
-        return existsAuthor;
+        return existsAuthor.get();
     }
 
     @Override
-    public Author updateById(long id, String newName) {
+    @Transactional
+    public Author updateById(BigInteger id, String newName) {
         var existsAuthor = readById(id);
         if (Objects.nonNull(existsAuthor)) {
             existsAuthor.setName(newName);
-            dao.update(existsAuthor);
+            dao.save(existsAuthor);
             component.write("Author with ID \"" + id + "\" successfully updated.");
             return existsAuthor;
         } else {
@@ -75,7 +78,8 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
-    public void deleteById(long id) {
+    @Transactional
+    public void deleteById(BigInteger id) {
         var existsAuthor = readById(id);
         if (Objects.nonNull(existsAuthor)) {
             dao.delete(existsAuthor);

@@ -5,7 +5,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
@@ -17,16 +18,20 @@ import ru.otus.library.dao.impl.GenreDaoImpl;
 import ru.otus.library.domain.Genre;
 import ru.otus.library.service.impl.GenreServiceImpl;
 
+import java.math.BigInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @Import({GenreDaoImpl.class, GenreServiceImpl.class})
-@JdbcTest
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
 
     private static final String NEW_GENRE = "бульварное чтиво";
+    private static final BigInteger EXISTS_GENRE_ID = BigInteger.valueOf(2);
     private static final String EXISTS_GENRE = "фэнтези";
 
     private static final String EXISTS_CAPTOR = "already exists";
@@ -35,6 +40,9 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
 
     @Autowired
     private GenreService genreService;
+
+    @Autowired
+    private TestEntityManager em;
 
     @SpyBean
     private GenreDao genreDao;
@@ -49,9 +57,10 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void createNotExistsGenreTest() {
         var genre = genreService.create(NEW_GENRE);
-        var genreAfterInsert = genreDao.getById(genre.getId());
+        em.detach(genre);
+        var genreAfterInsert = em.find(Genre.class, genre.getId());
         assertNotNull(genreAfterInsert);
-        verify(genreDao, times(1)).insert(any());
+        verify(genreDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
     }
@@ -59,11 +68,11 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/genres.sql")
     @Test
     void createExistsGenreTest() {
-        doNothing().when(inputOutputComponent).write(any());
         var genre = genreService.create(EXISTS_GENRE);
-        var genreAfterInsert = genreDao.getById(genre.getId());
+        em.detach(genre);
+        var genreAfterInsert = em.find(Genre.class, genre.getId());
         assertNotNull(genreAfterInsert);
-        verify(genreDao, times(0)).insert(any());
+        verify(genreDao, times(0)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(EXISTS_CAPTOR));
     }
@@ -71,10 +80,11 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/genres.sql")
     @Test
     void updateNotExistsGenreByIdTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        Genre genre = new Genre(10, NEW_GENRE);
+        Genre genre = new Genre(NEW_GENRE);
+        genre.setId(BigInteger.valueOf(10));
         genreService.updateById(genre.getId(), NEW_GENRE);
-        verify(genreDao, times(0)).update(any());
+        em.detach(genre);
+        verify(genreDao, times(0)).save(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -83,11 +93,12 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/genres.sql")
     @Test
     void updateExistsGenreByIdTest() {
-        var existsGenre = genreDao.getById(2);
+        var existsGenre = em.find(Genre.class, EXISTS_GENRE_ID);
         genreService.updateById(existsGenre.getId(), NEW_GENRE);
-        var genreAfterUpdate = genreDao.getById(2);
+        em.detach(existsGenre);
+        var genreAfterUpdate = em.find(Genre.class, EXISTS_GENRE_ID);
         assertNotNull(NEW_GENRE, genreAfterUpdate.getName());
-        verify(genreDao, times(1)).update(any());
+        verify(genreDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
     }
@@ -95,8 +106,7 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/genres.sql")
     @Test
     void deleteNotExistsGenreByIdTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        genreService.deleteById(10);
+        genreService.deleteById(BigInteger.valueOf(10));
         verify(genreDao, times(0)).delete(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -106,9 +116,10 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/genres.sql")
     @Test
     void deleteExistsGenreByIdTest() {
-        var existsGenre = genreDao.getById(2);
+        var existsGenre = em.find(Genre.class, EXISTS_GENRE_ID);
         genreService.deleteById(existsGenre.getId());
-        var genreAfterDelete = genreDao.getById(2);
+        em.detach(existsGenre);
+        var genreAfterDelete = em.find(Genre.class, EXISTS_GENRE_ID);
         assertNull(genreAfterDelete);
         verify(genreDao, times(1)).delete(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());

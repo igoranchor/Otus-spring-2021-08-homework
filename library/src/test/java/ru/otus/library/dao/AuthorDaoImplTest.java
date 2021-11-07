@@ -1,22 +1,24 @@
 package ru.otus.library.dao;
 
 import org.junit.jupiter.api.Test;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.context.jdbc.Sql;
 import ru.otus.library.dao.impl.AuthorDaoImpl;
 import ru.otus.library.domain.Author;
 
-import java.util.Objects;
+import javax.persistence.PersistenceException;
+import java.math.BigInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Import(AuthorDaoImpl.class)
-@JdbcTest
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AuthorDaoImplTest extends AbstractPostgreSQLContainerTest {
 
@@ -26,15 +28,20 @@ class AuthorDaoImplTest extends AbstractPostgreSQLContainerTest {
     private static final String NEW_AUTHOR_NAME = "Александр Дюма";
     private static final int AUTHORS_QUANTITY = 3;
 
+    private static final String NO_DATA_FOUND_EXCEPTION = "Не найдена доменная сущность";
+
     @Autowired
     private AuthorDao authorDao;
+
+    @Autowired
+    private TestEntityManager em;
 
     @Sql("/sql/authors.sql")
     @Test
     void insertNotExistsAuthorTest() {
         Author author = new Author(NEW_AUTHOR_NAME);
-        var id = authorDao.insert(author).getId();
-        var authorAfterInsert = authorDao.getById(id);
+        authorDao.save(author);
+        var authorAfterInsert = em.persistFlushFind(author);
         assertNotNull(authorAfterInsert);
     }
 
@@ -42,15 +49,17 @@ class AuthorDaoImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void insertExistsAuthorTest() {
         var exception = assertThrows(
-                DuplicateKeyException.class, () -> authorDao.insert(new Author(EXISTS_AUTHOR_NAME_ESENIN)));
-        assertTrue(Objects.nonNull(exception.getMessage()));
-        assertTrue(exception.getMessage().contains("authors_u1"));
+                PersistenceException.class, () -> authorDao.save(new Author(EXISTS_AUTHOR_NAME_ESENIN)));
+        var causeException = exception.getCause().getCause();
+        assertEquals(PSQLException.class, causeException.getClass());
+        assertNotNull(causeException.getMessage());
+        assertTrue(causeException.getMessage().contains("authors_u1"));
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void getAllAuthorsTest() {
-        var authors = authorDao.getAll();
+        var authors = authorDao.findAll();
         assertEquals(AUTHORS_QUANTITY, authors.size());
 
         var authorNames = authors.stream().map(Author::getName).collect(Collectors.toList());
@@ -62,44 +71,52 @@ class AuthorDaoImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/authors.sql")
     @Test
     void getExistsAuthorByIdTest() {
-        assertEquals(EXISTS_AUTHOR_NAME_ESENIN, authorDao.getById(2).getName());
+        var author = authorDao.findById(BigInteger.valueOf(2))
+                .orElseThrow(() -> new RuntimeException(NO_DATA_FOUND_EXCEPTION));
+        assertEquals(EXISTS_AUTHOR_NAME_ESENIN, author.getName());
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void getNotExistsAuthorByIdTest() {
-        assertNull(authorDao.getById(100));
+        var author = authorDao.findById(BigInteger.valueOf(100));
+        assertTrue(author.isEmpty());
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void getExistsAuthorByNameTest() {
-        assertNotNull(authorDao.getByName(EXISTS_AUTHOR_NAME_NABOKOV));
+        var author = authorDao.findByName(EXISTS_AUTHOR_NAME_NABOKOV);
+        assertFalse(author.isEmpty());
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void getNotExistsAuthorByNameTest() {
-        assertNull(authorDao.getByName(NEW_AUTHOR_NAME));
+        var author = authorDao.findByName(NEW_AUTHOR_NAME);
+        assertTrue(author.isEmpty());
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void updateAuthor() {
-        var author = authorDao.getById(2);
+        var author = em.find(Author.class, BigInteger.valueOf(2));
         author.setName(NEW_AUTHOR_NAME);
-        authorDao.update(author);
-        var authorAfterUpdate = authorDao.getById(2);
+        authorDao.save(author);
+        em.flush();
+        em.detach(author);
+        var authorAfterUpdate = em.find(Author.class, BigInteger.valueOf(2));
         assertEquals(NEW_AUTHOR_NAME, authorAfterUpdate.getName());
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void deleteAuthor() {
-        var author = authorDao.getById(2);
+        var author = em.find(Author.class, BigInteger.valueOf(2));
+        em.detach(author);
         authorDao.delete(author);
-        var authors = authorDao.getAll();
-        assertEquals(AUTHORS_QUANTITY - 1, authors.size());
+        var authorAfterDelete = em.find(Author.class, BigInteger.valueOf(2));
+        assertNull(authorAfterDelete);
     }
 
 }

@@ -2,6 +2,7 @@ package ru.otus.library.service;
 
 import ru.otus.library.domain.Book;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public interface BookService {
@@ -10,12 +11,12 @@ public interface BookService {
 
     List<Book> readAll();
 
-    Book readById(long id);
+    Book readById(BigInteger id);
 
     Book readByTitle(String title);
 
-    Book updateById(long id, String newTitle, String authorName, String genreName);
+    Book updateById(BigInteger id, String newTitle, String authorName, String genreName);
 
-    void deleteById(long id);
+    void deleteById(BigInteger id);
 
 }

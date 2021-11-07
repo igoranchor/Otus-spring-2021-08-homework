@@ -1,5 +1,6 @@
 package ru.otus.library.config;
 
+import lombok.RequiredArgsConstructor;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseDataSource;
@@ -10,13 +11,10 @@ import org.springframework.context.annotation.Configuration;
 import javax.sql.DataSource;
 
 @Configuration
+@RequiredArgsConstructor
 public class LiquibaseDataSourceConfig {
 
     private final DataSourceProperties dataSourceProperties;
-
-    public LiquibaseDataSourceConfig(DataSourceProperties dataSourceProperties) {
-        this.dataSourceProperties = dataSourceProperties;
-    }
 
     @Bean
     @LiquibaseDataSource
@@ -29,5 +27,5 @@ public class LiquibaseDataSourceConfig {
                 .driverClassName(dataSourceProperties.getDriverClassName())
                 .build();
     }
-    
+
 }

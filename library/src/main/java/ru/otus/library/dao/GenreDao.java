@@ -2,19 +2,19 @@ package ru.otus.library.dao;
 
 import ru.otus.library.domain.Genre;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 public interface GenreDao {
 
-    Genre insert(Genre domainEntity);
+    Genre save(Genre domainEntity);
 
-    List<Genre> getAll();
+    List<Genre> findAll();
 
-    Genre getById(long id);
+    Optional<Genre> findById(BigInteger id);
 
-    Genre getByName(String name);
-
-    void update(Genre domainEntity);
+    Optional<Genre> findByName(String name);
 
     void delete(Genre domainEntity);
 

@@ -5,7 +5,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
@@ -17,17 +18,21 @@ import ru.otus.library.dao.impl.*;
 import ru.otus.library.domain.*;
 import ru.otus.library.service.impl.*;
 
+import java.math.BigInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @Import({AuthorDaoImpl.class, AuthorServiceImpl.class,
         GenreDaoImpl.class, GenreServiceImpl.class,
         BookDaoImpl.class, BookServiceImpl.class})
-@JdbcTest
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
 
+    private static final BigInteger EXISTS_BOOK_HOBBIT_ID = BigInteger.valueOf(2);
     private static final String EXISTS_BOOK_LORD_OF_THE_RINGS = "Властелин колец";
     private static final String NEW_BOOK_SILMARILLION = "Cильмариллион";
     private static final String NEW_BOOK_ELRIC = "Элрик из Мелнибонэ";
@@ -44,6 +49,9 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
 
     @Autowired
     private BookService bookService;
+
+    @Autowired
+    private TestEntityManager em;
 
     @SpyBean
     private BookDao bookDao;
@@ -63,9 +71,9 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void createNotExistsBookAndAuthorExistsTest() {
-        doNothing().when(inputOutputComponent).write(any());
         var book = bookService.create(NEW_BOOK_SILMARILLION, EXISTS_AUTHOR, EXISTS_GENRE);
-        var bookAfterInsert = bookDao.getById(book.getId());
+        em.detach(book);
+        var bookAfterInsert = em.find(Book.class, book.getId());
         assertNotNull(bookAfterInsert);
         verify(authorService, times(1)).create(any());
         verify(genreService, times(1)).create(any());
@@ -80,9 +88,9 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void createNotExistsBookAndAuthorDoesNotExistTest() {
-        doNothing().when(inputOutputComponent).write(any());
         var book = bookService.create(NEW_BOOK_ELRIC, NEW_AUTHOR, EXISTS_GENRE);
-        var bookAfterInsert = bookDao.getById(book.getId());
+        em.detach(book);
+        var bookAfterInsert = em.find(Book.class, book.getId());
         assertNotNull(bookAfterInsert);
         verify(authorService, times(1)).create(any());
         verify(genreService, times(1)).create(any());
@@ -97,9 +105,9 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void createExistsBookTest() {
-        doNothing().when(inputOutputComponent).write(any());
         var book = bookService.create(EXISTS_BOOK_LORD_OF_THE_RINGS, EXISTS_AUTHOR, EXISTS_GENRE);
-        var bookAfterInsert = bookDao.getById(book.getId());
+        em.detach(book);
+        var bookAfterInsert = em.find(Book.class, book.getId());
         assertNotNull(bookAfterInsert);
         verify(authorService, times(0)).create(any());
         verify(genreService, times(0)).create(any());
@@ -110,10 +118,10 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void updateNotExistsBookByIdTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        Book book = new Book(10L, NEW_BOOK_SILMARILLION, new Genre(EXISTS_GENRE), new Author(EXISTS_AUTHOR));
+        Book book = new Book(NEW_BOOK_SILMARILLION, new Genre(EXISTS_GENRE), new Author(EXISTS_AUTHOR));
+        book.setId(BigInteger.valueOf(10));
         bookService.updateById(book.getId(), NEW_BOOK_ELRIC, NEW_AUTHOR, null);
-        verify(bookDao, times(0)).update(any());
+        verify(bookDao, times(0)).save(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -122,13 +130,14 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void updateExistsBookOnlyTitleByIdTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        var book = bookDao.getById(2);
+        var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
+        em.detach(book);
         bookService.updateById(book.getId(), NEW_BOOK_SILMARILLION, null, null);
-        var bookAfterUpdate = bookDao.getById(2);
+        em.detach(book);
+        var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertEquals(NEW_BOOK_SILMARILLION, bookAfterUpdate.getTitle());
         assertEquals(EXISTS_AUTHOR, bookAfterUpdate.getAuthor().getName());
-        verify(bookDao, times(1)).update(any());
+        verify(bookDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(SUCCESS_CAPTOR));
     }
@@ -136,13 +145,14 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void updateExistsBookByIdAndNewAuthorExistsTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        var book = bookDao.getById(2);
+        var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
+        em.detach(book);
         bookService.updateById(book.getId(), NEW_BOOK_SILMARILLION, EXISTS_ANOTHER_AUTHOR, null);
-        var bookAfterUpdate = bookDao.getById(2);
+        em.detach(book);
+        var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertEquals(NEW_BOOK_SILMARILLION, bookAfterUpdate.getTitle());
         assertEquals(EXISTS_ANOTHER_AUTHOR, bookAfterUpdate.getAuthor().getName());
-        verify(bookDao, times(1)).update(any());
+        verify(bookDao, times(1)).save(any());
         verify(authorService, times(1)).create(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(AUTHOR_CAPTOR));
@@ -153,13 +163,14 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void updateExistsBookByIdAndNewAuthorDoesNotExistTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        var book = bookDao.getById(2);
+        var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
+        em.detach(book);
         bookService.updateById(book.getId(), NEW_BOOK_ELRIC, NEW_AUTHOR, null);
-        var bookAfterUpdate = bookDao.getById(2);
+        em.detach(book);
+        var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);;
         assertEquals(NEW_BOOK_ELRIC, bookAfterUpdate.getTitle());
         assertEquals(NEW_AUTHOR, bookAfterUpdate.getAuthor().getName());
-        verify(bookDao, times(1)).update(any());
+        verify(bookDao, times(1)).save(any());
         verify(authorService, times(1)).create(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(AUTHOR_CAPTOR));
@@ -170,8 +181,7 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void deleteNotExistsBookByIdTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        bookService.deleteById(10);
+        bookService.deleteById(BigInteger.valueOf(10));
         verify(bookDao, times(0)).delete(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -181,10 +191,10 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/books.sql")
     @Test
     void deleteExistsBookByIdTest() {
-        doNothing().when(inputOutputComponent).write(any());
-        var book = bookDao.getById(2);
+        var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         bookService.deleteById(book.getId());
-        var bookAfterInsert = bookDao.getById(book.getId());
+        em.detach(book);
+        var bookAfterInsert = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertNull(bookAfterInsert);
         verify(authorService, times(0)).create(any());
         verify(genreService, times(0)).create(any());

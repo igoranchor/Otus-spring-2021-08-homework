@@ -2,19 +2,19 @@ package ru.otus.library.dao;
 
 import ru.otus.library.domain.Author;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 public interface AuthorDao {
 
-    Author insert(Author domainEntity);
+    Author save(Author domainEntity);
 
-    List<Author> getAll();
+    List<Author> findAll();
 
-    Author getById(long id);
+    Optional<Author> findById(BigInteger id);
 
-    Author getByName(String name);
-
-    void update(Author domainEntity);
+    Optional<Author> findByName(String name);
 
     void delete(Author domainEntity);
 

@@ -2,19 +2,19 @@ package ru.otus.library.dao;
 
 import ru.otus.library.domain.Book;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 public interface BookDao {
 
-    Book insert(Book domainEntity);
+    Book save(Book domainEntity);
 
-    List<Book> getAll();
+    List<Book> findAll();
 
-    Book getById(long id);
+    Optional<Book> findById(BigInteger id);
 
-    Book getByTitle(String title);
-
-    void update(Book domainEntity);
+    Optional<Book> findByTitle(String title);
 
     void delete(Book domainEntity);
 

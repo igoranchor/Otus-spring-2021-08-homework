@@ -1,20 +1,36 @@
 package ru.otus.library.domain;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import lombok.*;
 
+import javax.persistence.*;
+import java.math.BigInteger;
+import java.util.List;
+
+@Data
+@Table(name = "books")
+@Entity
+@ToString(exclude = "comments")
+@NoArgsConstructor
+@NamedEntityGraph(name = "author_genre_entity_graph",
+        attributeNodes = {@NamedAttributeNode("author"), @NamedAttributeNode("genre")})
+@EqualsAndHashCode(exclude = "comments")
 public class Book {
 
-    private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private BigInteger id;
 
-    @NotBlank(message = "Book title must not be blank")
+    @Column(name = "title", nullable = false, unique = true)
     private String title;
 
-    @NotNull(message = "Genre must not be null")
+    @ManyToOne(cascade = CascadeType.ALL)
     private Genre genre;
 
-    @NotNull(message = "Author must not be null")
+    @ManyToOne(cascade = CascadeType.ALL)
     private Author author;
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
 
     public Book(String title, Genre genre, Author author) {
         this.title = title;
@@ -22,52 +38,5 @@ public class Book {
         this.author = author;
     }
 
-    public Book(long id, String title, Genre genre, Author author) {
-        this.id = id;
-        this.title = title;
-        this.genre = genre;
-        this.author = author;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public Genre getGenre() {
-        return genre;
-    }
-
-    public void setGenre(Genre genre) {
-        this.genre = genre;
-    }
-
-    public Author getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(Author author) {
-        this.author = author;
-    }
-
-    @Override
-    public String toString() {
-        return "Book{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", genre=" + genre.toString() +
-                ", author=" + author.toString() +
-                '}';
-    }
 }
+

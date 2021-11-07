@@ -10,4 +10,7 @@ databaseChangeLog:
       file: "changelogs/books.yaml"
   - include:
       relativeToChangelogFile: true
+      file: "changelogs/comments.yaml"
+  - include:
+      relativeToChangelogFile: true
       file: "sql/data.sql"
