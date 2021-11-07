@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: genres_16_10_2021
+      author: a.yatskevich
+      changes:
+        - createSequence:
+            sequenceName: s_genres
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: genres_pk
+                  name: id
+                  type: number
+                  remarks: Первичный ключ
+                  defaultValueSequenceNext: s_genres
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(128)
+                  remarks: Назание жанра
+            tableName: genres
+            remarks: Книжные жанры
+        - createIndex:
+            columns:
+              - column:
+                  name: name
+            indexName: genres_u1
+            tableName: genres
+            unique: true
