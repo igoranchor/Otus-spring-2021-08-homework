@@ -1,3 +1,7 @@
+logging:
+  level:
+    com.zaxxer.hikari.pool: DEBUG
+    org.hibernate.SQL: DEBUG
 spring:
   application:
     name: library

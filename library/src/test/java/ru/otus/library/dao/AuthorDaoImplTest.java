@@ -6,18 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.jdbc.Sql;
-import ru.otus.library.dao.impl.AuthorDaoImpl;
 import ru.otus.library.domain.Author;
 
-import javax.persistence.PersistenceException;
 import java.math.BigInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Import(AuthorDaoImpl.class)
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AuthorDaoImplTest extends AbstractPostgreSQLContainerTest {
@@ -49,7 +46,7 @@ class AuthorDaoImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void insertExistsAuthorTest() {
         var exception = assertThrows(
-                PersistenceException.class, () -> authorDao.save(new Author(EXISTS_AUTHOR_NAME_ESENIN)));
+                DataIntegrityViolationException.class, () -> authorDao.save(new Author(EXISTS_AUTHOR_NAME_ESENIN)));
         var causeException = exception.getCause().getCause();
         assertEquals(PSQLException.class, causeException.getClass());
         assertNotNull(causeException.getMessage());

@@ -1,21 +1,15 @@
 package ru.otus.library.dao;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import ru.otus.library.domain.Book;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Optional;
 
-public interface BookDao {
-
-    Book save(Book domainEntity);
-
-    List<Book> findAll();
-
-    Optional<Book> findById(BigInteger id);
+@Repository
+public interface BookDao extends JpaRepository<Book, BigInteger> {
 
     Optional<Book> findByTitle(String title);
-
-    void delete(Book domainEntity);
 
 }

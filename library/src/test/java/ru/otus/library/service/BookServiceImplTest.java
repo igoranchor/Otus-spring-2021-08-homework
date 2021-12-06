@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 import ru.otus.library.component.InputOutputComponent;
 import ru.otus.library.dao.AbstractPostgreSQLContainerTest;
-import ru.otus.library.dao.BookDao;
-import ru.otus.library.dao.impl.*;
 import ru.otus.library.domain.*;
 import ru.otus.library.service.impl.*;
 
@@ -25,9 +23,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@Import({AuthorDaoImpl.class, AuthorServiceImpl.class,
-        GenreDaoImpl.class, GenreServiceImpl.class,
-        BookDaoImpl.class, BookServiceImpl.class})
+@Import({AuthorServiceImpl.class,
+        GenreServiceImpl.class,
+        BookServiceImpl.class})
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
@@ -52,9 +50,6 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
 
     @Autowired
     private TestEntityManager em;
-
-    @SpyBean
-    private BookDao bookDao;
 
     @SpyBean
     private AuthorService authorService;
@@ -121,7 +116,6 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
         Book book = new Book(NEW_BOOK_SILMARILLION, new Genre(EXISTS_GENRE), new Author(EXISTS_AUTHOR));
         book.setId(BigInteger.valueOf(10));
         bookService.updateById(book.getId(), NEW_BOOK_ELRIC, NEW_AUTHOR, null);
-        verify(bookDao, times(0)).save(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -137,7 +131,6 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
         var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertEquals(NEW_BOOK_SILMARILLION, bookAfterUpdate.getTitle());
         assertEquals(EXISTS_AUTHOR, bookAfterUpdate.getAuthor().getName());
-        verify(bookDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(SUCCESS_CAPTOR));
     }
@@ -152,7 +145,6 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
         var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertEquals(NEW_BOOK_SILMARILLION, bookAfterUpdate.getTitle());
         assertEquals(EXISTS_ANOTHER_AUTHOR, bookAfterUpdate.getAuthor().getName());
-        verify(bookDao, times(1)).save(any());
         verify(authorService, times(1)).create(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(AUTHOR_CAPTOR));
@@ -167,10 +159,10 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(book);
         bookService.updateById(book.getId(), NEW_BOOK_ELRIC, NEW_AUTHOR, null);
         em.detach(book);
-        var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);;
+        var bookAfterUpdate = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
+        ;
         assertEquals(NEW_BOOK_ELRIC, bookAfterUpdate.getTitle());
         assertEquals(NEW_AUTHOR, bookAfterUpdate.getAuthor().getName());
-        verify(bookDao, times(1)).save(any());
         verify(authorService, times(1)).create(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(AUTHOR_CAPTOR));
@@ -182,7 +174,6 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void deleteNotExistsBookByIdTest() {
         bookService.deleteById(BigInteger.valueOf(10));
-        verify(bookDao, times(0)).delete(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));

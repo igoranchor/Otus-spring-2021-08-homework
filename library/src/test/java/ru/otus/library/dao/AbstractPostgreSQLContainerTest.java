@@ -9,7 +9,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-@ContextConfiguration(initializers = {AuthorDaoImplTest.Initializer.class})
+@ContextConfiguration(initializers = {AbstractPostgreSQLContainerTest.Initializer.class})
 public abstract class AbstractPostgreSQLContainerTest {
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {

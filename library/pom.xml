@@ -78,4 +78,31 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>proxy-maven-central</id>
+            <url>https://nexus.tcsbank.ru/repository/mvn-maven-proxy/</url>
+        </repository>
+        <repository>
+            <id>processing-release</id>
+            <url>https://nexus.tcsbank.ru/repository/mvn_processing_release/</url>
+        </repository>
+        <repository>
+            <id>confluent</id>
+            <url>https://nexus.tcsbank.ru/repository/mvn-confluent-proxy/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central</id>
+            <url>https://nexus.tcsbank.ru/repository/mvn-maven-proxy</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>processing-release</id>
+            <url>https://nexus.tcsbank.ru/repository/mvn_processing_release</url>
+        </pluginRepository>
+    </pluginRepositories>
+
 </project>

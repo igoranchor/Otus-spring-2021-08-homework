@@ -1,21 +1,15 @@
 package ru.otus.library.dao;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import ru.otus.library.domain.Genre;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Optional;
 
-public interface GenreDao {
-
-    Genre save(Genre domainEntity);
-
-    List<Genre> findAll();
-
-    Optional<Genre> findById(BigInteger id);
+@Repository
+public interface GenreDao extends JpaRepository<Genre, BigInteger> {
 
     Optional<Genre> findByName(String name);
-
-    void delete(Genre domainEntity);
 
 }

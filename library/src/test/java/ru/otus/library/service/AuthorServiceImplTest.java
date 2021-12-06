@@ -8,24 +8,20 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 import ru.otus.library.component.InputOutputComponent;
 import ru.otus.library.dao.AbstractPostgreSQLContainerTest;
-import ru.otus.library.dao.AuthorDao;
-import ru.otus.library.dao.impl.AuthorDaoImpl;
 import ru.otus.library.domain.Author;
 import ru.otus.library.service.impl.AuthorServiceImpl;
 
 import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@Import({AuthorDaoImpl.class, AuthorServiceImpl.class})
+@Import({AuthorServiceImpl.class})
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
@@ -44,9 +40,6 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Autowired
     private TestEntityManager em;
 
-    @SpyBean
-    private AuthorDao authorDao;
-
     @MockBean
     private InputOutputComponent inputOutputComponent;
 
@@ -60,9 +53,9 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(author);
         var authorAfterInsert = em.find(Author.class, author.getId());
         assertNotNull(authorAfterInsert);
-        verify(authorDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
+        em.detach(authorAfterInsert);
     }
 
     @Sql("/sql/authors.sql")
@@ -72,7 +65,6 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(author);
         var authorAfterInsert = em.find(Author.class, author.getId());
         assertNotNull(authorAfterInsert);
-        verify(authorDao, times(0)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(EXISTS_CAPTOR));
     }
@@ -84,7 +76,6 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
         author.setId(BigInteger.valueOf(10));
         authorService.updateById(author.getId(), NEW_AUTHOR_NAME);
         em.detach(author);
-        verify(authorDao, times(0)).save(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -99,16 +90,15 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(existsAuthor);
         var authorAfterUpdate = em.find(Author.class, EXISTS_AUTHOR_NAME_ID);
         assertEquals(NEW_AUTHOR_NAME, authorAfterUpdate.getName());
-        verify(authorDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
+        em.detach(authorAfterUpdate);
     }
 
     @Sql("/sql/authors.sql")
     @Test
     void deleteNotExistsAuthorByIdTest() {
         authorService.deleteById(BigInteger.valueOf(10));
-        verify(authorDao, times(0)).delete(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -121,7 +111,6 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
         authorService.deleteById(existsAuthor.getId());
         var authorAfterDelete = em.find(Author.class, EXISTS_AUTHOR_NAME_ID);
         assertNull(authorAfterDelete);
-        verify(authorDao, times(1)).delete(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
     }

@@ -6,17 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.jdbc.Sql;
-import ru.otus.library.dao.impl.CommentDaoImpl;
 import ru.otus.library.domain.*;
 
-import javax.persistence.PersistenceException;
 import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Import(CommentDaoImpl.class)
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CommentDaoImplTest extends AbstractPostgreSQLContainerTest {
@@ -51,7 +48,7 @@ class CommentDaoImplTest extends AbstractPostgreSQLContainerTest {
         Author author = em.find(Author.class, BigInteger.valueOf(2));
         Genre genre = em.find(Genre.class, BigInteger.valueOf(2));
         var exception = assertThrows(
-                PersistenceException.class, () -> commentDao.save(new Comment(NEW_COMMENT,
+                DataIntegrityViolationException.class, () -> commentDao.save(new Comment(NEW_COMMENT,
                         new Book(NOT_EXISTS_BOOK_SILMARILLION, genre, author))));
         var causeException = exception.getCause().getCause();
         assertEquals(PSQLException.class, causeException.getClass());

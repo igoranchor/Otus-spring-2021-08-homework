@@ -8,24 +8,20 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 import ru.otus.library.component.InputOutputComponent;
 import ru.otus.library.dao.AbstractPostgreSQLContainerTest;
-import ru.otus.library.dao.GenreDao;
-import ru.otus.library.dao.impl.GenreDaoImpl;
 import ru.otus.library.domain.Genre;
 import ru.otus.library.service.impl.GenreServiceImpl;
 
 import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@Import({GenreDaoImpl.class, GenreServiceImpl.class})
+@Import(GenreServiceImpl.class)
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
@@ -44,9 +40,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Autowired
     private TestEntityManager em;
 
-    @SpyBean
-    private GenreDao genreDao;
-
     @MockBean
     private InputOutputComponent inputOutputComponent;
 
@@ -60,7 +53,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(genre);
         var genreAfterInsert = em.find(Genre.class, genre.getId());
         assertNotNull(genreAfterInsert);
-        verify(genreDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
     }
@@ -72,7 +64,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(genre);
         var genreAfterInsert = em.find(Genre.class, genre.getId());
         assertNotNull(genreAfterInsert);
-        verify(genreDao, times(0)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(EXISTS_CAPTOR));
     }
@@ -84,7 +75,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
         genre.setId(BigInteger.valueOf(10));
         genreService.updateById(genre.getId(), NEW_GENRE);
         em.detach(genre);
-        verify(genreDao, times(0)).save(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -98,7 +88,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
         em.detach(existsGenre);
         var genreAfterUpdate = em.find(Genre.class, EXISTS_GENRE_ID);
         assertNotNull(NEW_GENRE, genreAfterUpdate.getName());
-        verify(genreDao, times(1)).save(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
     }
@@ -107,7 +96,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void deleteNotExistsGenreByIdTest() {
         genreService.deleteById(BigInteger.valueOf(10));
-        verify(genreDao, times(0)).delete(any());
         verify(inputOutputComponent, times(2)).write(captor.capture());
         assertTrue(captor.getAllValues().get(0).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
         assertTrue(captor.getAllValues().get(1).toLowerCase().contains(DOES_NOT_EXIST_CAPTOR));
@@ -120,7 +108,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
         genreService.deleteById(existsGenre.getId());
         var genreAfterDelete = em.find(Genre.class, EXISTS_GENRE_ID);
         assertNull(genreAfterDelete);
-        verify(genreDao, times(1)).delete(any());
         verify(inputOutputComponent, times(1)).write(captor.capture());
         assertTrue(captor.getValue().toLowerCase().contains(SUCCESS_CAPTOR));
     }

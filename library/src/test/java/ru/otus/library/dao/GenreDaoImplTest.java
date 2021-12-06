@@ -4,21 +4,17 @@ import org.junit.jupiter.api.Test;
 import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.jdbc.Sql;
-import ru.otus.library.dao.impl.GenreDaoImpl;
 import ru.otus.library.domain.Genre;
 
-import javax.persistence.PersistenceException;
 import java.math.BigInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Import(GenreDaoImpl.class)
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class GenreDaoImplTest extends AbstractPostgreSQLContainerTest {
@@ -50,7 +46,7 @@ class GenreDaoImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void insertExistsGenreTest() {
         var exception = assertThrows(
-                PersistenceException.class, () -> genreDao.save(new Genre(EXISTS_GENRE_FANTASY)));
+                DataIntegrityViolationException.class, () -> genreDao.save(new Genre(EXISTS_GENRE_FANTASY)));
         var causeException = exception.getCause().getCause();
         assertEquals(PSQLException.class, causeException.getClass());
         assertNotNull(exception.getMessage());

@@ -1,21 +1,15 @@
 package ru.otus.library.dao;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import ru.otus.library.domain.Author;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Optional;
 
-public interface AuthorDao {
-
-    Author save(Author domainEntity);
-
-    List<Author> findAll();
-
-    Optional<Author> findById(BigInteger id);
+@Repository
+public interface AuthorDao extends JpaRepository<Author, BigInteger> {
 
     Optional<Author> findByName(String name);
-
-    void delete(Author domainEntity);
 
 }

@@ -5,19 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.jdbc.Sql;
-import ru.otus.library.dao.impl.BookDaoImpl;
 import ru.otus.library.domain.*;
 
-import javax.persistence.PersistenceException;
 import java.math.BigInteger;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Import(BookDaoImpl.class)
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class BookDaoImplTest extends AbstractPostgreSQLContainerTest {
@@ -75,7 +72,7 @@ class BookDaoImplTest extends AbstractPostgreSQLContainerTest {
         var author = em.find(Author.class, EXISTS_AUTHOR_ID);
         var genre = em.find(Genre.class, EXISTS_GENRE_ID);
         var book = new Book(EXISTS_BOOK_HOBBIT, genre, author);
-        var exception = assertThrows(PersistenceException.class, () -> bookDao.save(book));
+        var exception = assertThrows(DataIntegrityViolationException.class, () -> bookDao.save(book));
         var pgSqlException = exception.getCause().getCause();
         assertTrue(Objects.nonNull(pgSqlException.getMessage()));
         assertTrue(pgSqlException.getMessage().contains("books_u1"));
@@ -179,7 +176,7 @@ class BookDaoImplTest extends AbstractPostgreSQLContainerTest {
         var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         em.detach(book);
         bookDao.delete(book);
-        var bookAfterDelete = em.find(Author.class, EXISTS_BOOK_HOBBIT_ID);
+        var bookAfterDelete = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertNull(bookAfterDelete);
     }
 
