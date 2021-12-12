@@ -118,7 +118,6 @@ class GenreServiceImplTest extends AbstractPostgreSQLContainerTest {
     void deleteExistsGenreByIdTest() {
         var existsGenre = em.find(Genre.class, EXISTS_GENRE_ID);
         genreService.deleteById(existsGenre.getId());
-        em.detach(existsGenre);
         var genreAfterDelete = em.find(Genre.class, EXISTS_GENRE_ID);
         assertNull(genreAfterDelete);
         verify(genreDao, times(1)).delete(any());

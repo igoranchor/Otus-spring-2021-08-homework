@@ -45,17 +45,14 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public List<Comment> readByBookId(BigInteger bookId) {
         var book = bookService.readById(bookId);
         if (Objects.isNull(book)) {
             component.write("it is impossible to add a comment for a non-existent book.");
             return null;
         }
-        var existsComment = dao.findByBook(book);
-        if (existsComment.isEmpty()) {
-            component.write("Comments on book\"" + book.getTitle() + "\" does not exist.");
-        }
-        return existsComment;
+        return book.getComments();
     }
 
     @Override

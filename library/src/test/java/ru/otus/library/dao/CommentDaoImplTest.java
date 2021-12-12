@@ -1,6 +1,5 @@
 package ru.otus.library.dao;
 
-import org.hibernate.TransientObjectException;
 import org.junit.jupiter.api.Test;
 import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,26 +89,6 @@ class CommentDaoImplTest extends AbstractPostgreSQLContainerTest {
     void getNotExistsCommentByIdTest() {
         var comment = commentDao.findById(BigInteger.valueOf(100));
         assertTrue(comment.isEmpty());
-    }
-
-    @Sql("/sql/comments.sql")
-    @Test
-    void getCommentsByExistsBookTest() {
-        Book book = em.find(Book.class, BigInteger.valueOf(3));
-        var comments = commentDao.findByBook(book);
-        assertEquals(COMMENTS_QUANTITY_OF_BOOK, comments.size());
-    }
-
-    @Sql("/sql/comments.sql")
-    @Test
-    void getCommentsByNotExitsBookTest() {
-        Book book = new Book();
-        var exception = assertThrows(
-                IllegalStateException.class, () -> commentDao.findByBook(book));
-        var causeException = exception.getCause();
-        assertEquals(TransientObjectException.class, causeException.getClass());
-        assertNotNull(exception.getMessage());
-        System.out.println(exception.getMessage());
     }
 
     @Sql("/sql/comments.sql")

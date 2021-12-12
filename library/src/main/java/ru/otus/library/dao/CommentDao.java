@@ -15,8 +15,6 @@ public interface CommentDao {
 
     Optional<Comment> findById(BigInteger id);
 
-    List<Comment> findByBook(Book book);
-
     void delete(Comment domainEntity);
 
 }

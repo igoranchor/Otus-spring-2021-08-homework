@@ -179,8 +179,8 @@ class BookDaoImplTest extends AbstractPostgreSQLContainerTest {
         var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         em.detach(book);
         bookDao.delete(book);
-        var books = bookDao.findAll();
-        assertEquals(BOOKS_QUANTITY - 1, books.size());
+        var bookAfterDelete = em.find(Author.class, EXISTS_BOOK_HOBBIT_ID);
+        assertNull(bookAfterDelete);
     }
 
 }

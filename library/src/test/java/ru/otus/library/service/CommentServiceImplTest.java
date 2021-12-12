@@ -99,7 +99,6 @@ class CommentServiceImplTest extends AbstractPostgreSQLContainerTest {
     void deleteExistsComment() {
         var existsComment = em.find(Comment.class, EXISTS_COMMENT_ID);
         commentService.deleteById(existsComment.getId());
-        em.detach(existsComment);
         var commentAfterDelete = em.find(Comment.class, EXISTS_COMMENT_ID);
         assertNull(commentAfterDelete);
         verify(commentDao, times(1)).delete(any());

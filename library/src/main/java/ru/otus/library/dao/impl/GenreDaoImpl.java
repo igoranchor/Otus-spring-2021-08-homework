@@ -1,6 +1,7 @@
 package ru.otus.library.dao.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.otus.library.dao.GenreDao;
 import ru.otus.library.domain.Genre;
@@ -10,7 +11,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Component
 @RequiredArgsConstructor
 public class GenreDaoImpl implements GenreDao {
 
@@ -53,11 +54,7 @@ public class GenreDaoImpl implements GenreDao {
 
     @Override
     public void delete(Genre domainEntity) {
-        Query query = em.createQuery("delete " +
-                "from Genre g " +
-                "where g.id = :id");
-        query.setParameter("id", domainEntity.getId());
-        query.executeUpdate();
+        em.remove(em.contains(domainEntity) ? domainEntity : em.merge(domainEntity));
     }
 
 }

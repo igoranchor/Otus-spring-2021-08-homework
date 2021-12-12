@@ -1,6 +1,7 @@
 package ru.otus.library.dao.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.otus.library.dao.BookDao;
 import ru.otus.library.domain.Book;
@@ -10,7 +11,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Component
 @RequiredArgsConstructor
 public class BookDaoImpl implements BookDao {
 
@@ -56,11 +57,7 @@ public class BookDaoImpl implements BookDao {
 
     @Override
     public void delete(Book domainEntity) {
-        Query query = em.createQuery("delete " +
-                "from Book b " +
-                "where b.id = :id");
-        query.setParameter("id", domainEntity.getId());
-        query.executeUpdate();
+        em.remove(em.contains(domainEntity) ? domainEntity : em.merge(domainEntity));
     }
 
 }

@@ -119,7 +119,6 @@ class AuthorServiceImplTest extends AbstractPostgreSQLContainerTest {
     void deleteExistsAuthorByIdTest() {
         var existsAuthor = em.find(Author.class, EXISTS_AUTHOR_NAME_ID);
         authorService.deleteById(existsAuthor.getId());
-        em.detach(existsAuthor);
         var authorAfterDelete = em.find(Author.class, EXISTS_AUTHOR_NAME_ID);
         assertNull(authorAfterDelete);
         verify(authorDao, times(1)).delete(any());

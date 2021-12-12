@@ -1,7 +1,7 @@
 package ru.otus.library.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 import ru.otus.library.dao.AuthorDao;
 import ru.otus.library.domain.Author;
 
@@ -10,7 +10,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Component
 @RequiredArgsConstructor
 public class AuthorDaoImpl implements AuthorDao {
 
@@ -53,11 +53,7 @@ public class AuthorDaoImpl implements AuthorDao {
 
     @Override
     public void delete(Author domainEntity) {
-        Query query = em.createQuery("delete " +
-                "from Author a " +
-                "where a.id = :id");
-        query.setParameter("id", domainEntity.getId());
-        query.executeUpdate();
+        em.remove(em.contains(domainEntity) ? domainEntity : em.merge(domainEntity));
     }
 
 }

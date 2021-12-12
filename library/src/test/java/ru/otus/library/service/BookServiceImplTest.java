@@ -193,7 +193,6 @@ class BookServiceImplTest extends AbstractPostgreSQLContainerTest {
     void deleteExistsBookByIdTest() {
         var book = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         bookService.deleteById(book.getId());
-        em.detach(book);
         var bookAfterInsert = em.find(Book.class, EXISTS_BOOK_HOBBIT_ID);
         assertNull(bookAfterInsert);
         verify(authorService, times(0)).create(any());
