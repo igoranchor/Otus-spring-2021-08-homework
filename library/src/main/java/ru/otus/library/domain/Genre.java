@@ -1,41 +1,31 @@
 package ru.otus.library.domain;
 
+import lombok.*;
+
+import javax.persistence.*;
+import java.math.BigInteger;
+import java.util.List;
+
+@Data
+@Table(name = "genres")
+@Entity
+@ToString(exclude = "books")
+@NoArgsConstructor
+@EqualsAndHashCode(exclude = "books")
 public class Genre {
 
-    private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private BigInteger id;
 
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    public Genre(long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Book> books;
 
     public Genre(String name) {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return "Genre{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                '}';
-    }
 }

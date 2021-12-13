@@ -1,14 +1,20 @@
 package ru.otus.library.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.shell.standard.*;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.transaction.annotation.Transactional;
 import ru.otus.library.component.InputOutputComponent;
+import ru.otus.library.domain.Book;
 import ru.otus.library.service.BookService;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.shell.standard.ShellOption.NULL;
 
-@Validated
 @ShellComponent("Book controller")
+@RequiredArgsConstructor
 public class BookShellController {
 
     private static final String GROUP_NAME = "Book group";
@@ -17,10 +23,6 @@ public class BookShellController {
     private final InputOutputComponent inputOutputComponent;
     private final BookService bookService;
 
-    public BookShellController(InputOutputComponent inputOutputComponent, BookService bookService) {
-        this.inputOutputComponent = inputOutputComponent;
-        this.bookService = bookService;
-    }
 
     @ShellMethod(value = "\nCreate book and save to Database.\n"
             + "Keys: \n * --title or -t, required, uses for specify book title\n."
@@ -39,17 +41,25 @@ public class BookShellController {
             + " * --title or -t, non-required, uses for specify book title."
             + SEPARATE_STRING,
             key = {"read-books", "rb"}, group = GROUP_NAME)
-    public void readBooks(@ShellOption(value = "--id", defaultValue = NULL) String id,
-                          @ShellOption(value = {"--title", "-t"}, defaultValue = NULL) String title) {
+    @Transactional
+    public void readBooks(@ShellOption(value = "--id", defaultValue = NULL) BigInteger id,
+                          @ShellOption(value = {"--title", "-t"}, defaultValue = NULL) String title,
+                          @ShellOption(value = {"--with-comments", "-c"}, defaultValue = "false") boolean withComments) {
+        List<Book> books = new ArrayList<>();
         if (id != null) {
-            inputOutputComponent.write(bookService.readById(Long.parseLong(id)).toString());
-            return;
+            books.add(bookService.readById(id));
+        } else if (title != null) {
+            books.add(bookService.readByTitle(title));
+        } else {
+            books.addAll(bookService.readAll());
         }
-        if (title != null) {
-            inputOutputComponent.write(bookService.readByTitle(title).toString());
-            return;
-        }
-        bookService.readAll().forEach(x -> inputOutputComponent.write(x.toString()));
+        books.forEach(
+                x -> {
+                    inputOutputComponent.write(x.toString());
+                    if (withComments) {
+                        inputOutputComponent.write(x.getComments().toString());
+                    }
+                });
     }
 
     @ShellMethod(value = "\nUpdate book.\n"
@@ -59,11 +69,11 @@ public class BookShellController {
             + " * --genre or -g, non-required, uses for specify new book genre (name)."
             + SEPARATE_STRING,
             key = {"update-book", "ub"}, group = GROUP_NAME)
-    public void updateBookById(@ShellOption("--id") String id,
+    public void updateBookById(@ShellOption("--id") BigInteger id,
                                @ShellOption({"--title", "-t"}) String title,
                                @ShellOption(value = {"--author", "-a"}, defaultValue = NULL) String authorName,
                                @ShellOption(value = {"--genre", "-g"}, defaultValue = NULL) String genreName) {
-        inputOutputComponent.write(bookService.updateById(Long.parseLong(id), title, authorName, genreName).toString());
+        inputOutputComponent.write(bookService.updateById(id, title, authorName, genreName).toString());
     }
 
     @ShellMethod(value = "\nDelete books from Database.\n"
@@ -73,13 +83,13 @@ public class BookShellController {
             + SEPARATE_STRING,
             key = {"delete-books", "db"}, group = GROUP_NAME)
     public void deleteBook(@ShellOption(value = "--all", defaultValue = "false") boolean all,
-                           @ShellOption(value = "--id", defaultValue = NULL) String id) {
+                           @ShellOption(value = "--id", defaultValue = NULL) BigInteger id) {
         if (all) {
             bookService.readAll().forEach(x -> bookService.deleteById(x.getId()));
             return;
         }
         if (id != null) {
-            bookService.deleteById(Long.parseLong(id));
+            bookService.deleteById(id);
             return;
         }
         inputOutputComponent.write("You must specify key \"--all\" for deleting all books "

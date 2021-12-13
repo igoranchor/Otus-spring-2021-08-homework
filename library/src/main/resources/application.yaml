@@ -6,5 +6,12 @@ spring:
     username: library
     password: library
     driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
   liquibase:
     changeLog: "classpath:/db/changelog-master.yaml"

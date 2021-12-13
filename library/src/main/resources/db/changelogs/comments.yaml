@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: comments_14_11_2021
+      author: a.yatskevich
+      changes:
+        - createSequence:
+            sequenceName: s_comments
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: comments_pk
+                  name: id
+                  type: number
+                  remarks: Первичный ключ
+                  defaultValueSequenceNext: s_comments
+              - column:
+                  constraints:
+                    nullable: false
+                  name: text
+                  type: varchar(4000)
+                  remarks: Текст комментария
+              - column:
+                  constraints:
+                    nullable: false
+                  name: book_id
+                  type: number
+                  remarks: Идентификатор книги
+            tableName: comments
+            remarks: Комментарии к книге
+        - addForeignKeyConstraint:
+            constraintName: comments_fk1
+            baseColumnNames: book_id
+            baseTableName: comments
+            referencedColumnNames: id
+            referencedTableName: books
+            onDelete: CASCADE
+            onUpdate: RESTRICT

@@ -1,14 +1,16 @@
 package ru.otus.library.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.shell.standard.*;
-import org.springframework.validation.annotation.Validated;
 import ru.otus.library.component.InputOutputComponent;
 import ru.otus.library.service.GenreService;
 
+import java.math.BigInteger;
+
 import static org.springframework.shell.standard.ShellOption.NULL;
 
-@Validated
 @ShellComponent("Genre controller")
+@RequiredArgsConstructor
 public class GenreShellController {
 
     private static final String GROUP_NAME = "Genre group";
@@ -16,11 +18,6 @@ public class GenreShellController {
 
     private final InputOutputComponent inputOutputComponent;
     private final GenreService genreService;
-
-    public GenreShellController(InputOutputComponent inputOutputComponent, GenreService genreService) {
-        this.inputOutputComponent = inputOutputComponent;
-        this.genreService = genreService;
-    }
 
     @ShellMethod(value = "\nCreate genre and save to Database.\n"
             + "Keys: \n * --name or -n, required, uses for specify genre name."
@@ -35,10 +32,10 @@ public class GenreShellController {
             + " * --name or -n, non-required, uses for specify genre name."
             + SEPARATE_STRING,
             key = {"read-genres", "rg"}, group = GROUP_NAME)
-    public void readGenres(@ShellOption(value = "--id", defaultValue = NULL) String id,
+    public void readGenres(@ShellOption(value = "--id", defaultValue = NULL) BigInteger id,
                            @ShellOption(value = "--name", defaultValue = NULL) String name) {
         if (id != null) {
-            inputOutputComponent.write(genreService.readById(Long.parseLong(id)).toString());
+            inputOutputComponent.write(genreService.readById(id).toString());
             return;
         }
         if (name != null) {
@@ -53,9 +50,12 @@ public class GenreShellController {
             + " * --name or -n, required, uses for specify new genre name."
             + SEPARATE_STRING,
             key = {"update-genre", "ug"}, group = GROUP_NAME)
-    public void updateGenreById(@ShellOption("--id") String id,
+    public void updateGenreById(@ShellOption("--id") BigInteger id,
                                 @ShellOption("--name") String name) {
-        inputOutputComponent.write(genreService.updateById(Long.parseLong(id), name).toString());
+        var genreAfterUpdate = genreService.updateById(id, name);
+        if (genreAfterUpdate != null) {
+            inputOutputComponent.write(genreAfterUpdate.toString());
+        }
     }
 
     @ShellMethod(value = "\nDelete genre from Database and !!! ALL !!! books this genre.\n"
@@ -65,13 +65,13 @@ public class GenreShellController {
             + SEPARATE_STRING,
             key = {"delete-genre", "dg"}, group = GROUP_NAME)
     public void deleteGenre(@ShellOption(value = "--all", defaultValue = "false") boolean all,
-                            @ShellOption(value = "--id", defaultValue = NULL) String id) {
+                            @ShellOption(value = "--id", defaultValue = NULL) BigInteger id) {
         if (all) {
             genreService.readAll().forEach(x -> genreService.deleteById(x.getId()));
             return;
         }
         if (id != null) {
-            genreService.deleteById(Long.parseLong(id));
+            genreService.deleteById(id);
             return;
         }
         inputOutputComponent.write("You must specify key \"--all\" for deleting all genres "

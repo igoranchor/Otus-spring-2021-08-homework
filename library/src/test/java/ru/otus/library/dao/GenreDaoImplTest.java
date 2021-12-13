@@ -1,22 +1,25 @@
 package ru.otus.library.dao;
 
 import org.junit.jupiter.api.Test;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.context.jdbc.Sql;
 import ru.otus.library.dao.impl.GenreDaoImpl;
 import ru.otus.library.domain.Genre;
 
-import java.util.Objects;
+import javax.persistence.PersistenceException;
+import java.math.BigInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Import(GenreDaoImpl.class)
-@JdbcTest
+@DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class GenreDaoImplTest extends AbstractPostgreSQLContainerTest {
 
@@ -26,15 +29,20 @@ class GenreDaoImplTest extends AbstractPostgreSQLContainerTest {
     private static final String NEW_GENRE = "бульварное чтиво";
     private static final int GENRES_QUANTITY = 3;
 
+    private static final String NO_DATA_FOUND_EXCEPTION = "Не найдена доменная сущность";
+
     @Autowired
     private GenreDao genreDao;
+
+    @Autowired
+    private TestEntityManager em;
 
     @Sql("/sql/genres.sql")
     @Test
     void insertNotExistsGenreTest() {
         Genre genre = new Genre(NEW_GENRE);
-        var id = genreDao.insert(genre).getId();
-        var genreAfterInsert = genreDao.getById(id);
+        genreDao.save(genre);
+        var genreAfterInsert = em.persistFlushFind(genre);
         assertNotNull(genreAfterInsert);
     }
 
@@ -42,15 +50,17 @@ class GenreDaoImplTest extends AbstractPostgreSQLContainerTest {
     @Test
     void insertExistsGenreTest() {
         var exception = assertThrows(
-                DuplicateKeyException.class, () -> genreDao.insert(new Genre(EXISTS_GENRE_FANTASY)));
-        assertTrue(Objects.nonNull(exception.getMessage()));
-        assertTrue(exception.getMessage().contains("genres_u1"));
+                PersistenceException.class, () -> genreDao.save(new Genre(EXISTS_GENRE_FANTASY)));
+        var causeException = exception.getCause().getCause();
+        assertEquals(PSQLException.class, causeException.getClass());
+        assertNotNull(exception.getMessage());
+        assertTrue(causeException.getMessage().contains("genres_u1"));
     }
 
     @Sql("/sql/genres.sql")
     @Test
     void getAllGenresTest() {
-        var genres = genreDao.getAll();
+        var genres = genreDao.findAll();
         assertEquals(GENRES_QUANTITY, genres.size());
 
         var GenreNames = genres.stream().map(Genre::getName).collect(Collectors.toList());
@@ -62,44 +72,52 @@ class GenreDaoImplTest extends AbstractPostgreSQLContainerTest {
     @Sql("/sql/genres.sql")
     @Test
     void getExistsGenreByIdTest() {
-        assertEquals(EXISTS_GENRE_FANTASY, genreDao.getById(2).getName());
+        var genre = genreDao.findById(BigInteger.valueOf(2))
+                .orElseThrow(() -> new RuntimeException(NO_DATA_FOUND_EXCEPTION));
+        assertEquals(EXISTS_GENRE_FANTASY, genre.getName());
     }
 
     @Sql("/sql/genres.sql")
     @Test
     void getNotExistsGenreByIdTest() {
-        assertNull(genreDao.getById(100));
+        var genre = genreDao.findById(BigInteger.valueOf(100));
+        assertTrue(genre.isEmpty());
     }
 
     @Sql("/sql/genres.sql")
     @Test
     void getExistsGenreByNameTest() {
-        assertNotNull(genreDao.getByName(EXISTS_GENRE_SPY));
+        var genre = genreDao.findByName(EXISTS_GENRE_SPY);
+        assertFalse(genre.isEmpty());
     }
 
     @Sql("/sql/genres.sql")
     @Test
     void getNotExistsGenreByNameTest() {
-        assertNull(genreDao.getByName(NEW_GENRE));
+        var genre = genreDao.findByName(NEW_GENRE);
+        assertTrue(genre.isEmpty());
     }
 
     @Sql("/sql/genres.sql")
     @Test
     void updateGenre() {
-        var genre = genreDao.getById(2);
+        var genre = em.find(Genre.class, BigInteger.valueOf(2));
         genre.setName(NEW_GENRE);
-        genreDao.update(genre);
-        var genreAfterUpdate = genreDao.getById(2);
+        genreDao.save(genre);
+        em.flush();
+        em.detach(genre);
+        var genreAfterUpdate = em.find(Genre.class, BigInteger.valueOf(2));
         assertEquals(NEW_GENRE, genreAfterUpdate.getName());
     }
 
     @Sql("/sql/genres.sql")
     @Test
     void deleteGenre() {
-        var genre = genreDao.getById(2);
+        var genre = em.find(Genre.class, BigInteger.valueOf(2));
+        em.detach(genre);
         genreDao.delete(genre);
-        var genres = genreDao.getAll();
-        assertEquals(GENRES_QUANTITY - 1, genres.size());
+        var genreAfterDelete = em.find(Genre.class, BigInteger.valueOf(2));
+        assertNull(genreAfterDelete);
     }
 
 }

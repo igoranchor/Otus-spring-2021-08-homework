@@ -2,6 +2,7 @@ package ru.otus.library.service;
 
 import ru.otus.library.domain.Genre;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public interface GenreService {
@@ -10,12 +11,12 @@ public interface GenreService {
 
     List<Genre> readAll();
 
-    Genre readById(long id);
+    Genre readById(BigInteger id);
 
     Genre readByName(String name);
 
-    Genre updateById(long id, String newName);
+    Genre updateById(BigInteger id, String newName);
 
-    void deleteById(long id);
+    void deleteById(BigInteger id);
 
 }
