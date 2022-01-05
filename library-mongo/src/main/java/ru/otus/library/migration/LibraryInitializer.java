@@ -1,0 +1,75 @@
+package ru.otus.library.migration;
+
+import io.mongock.api.annotations.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import ru.otus.library.domain.*;
+
+import java.util.List;
+
+@ChangeUnit(id = "mongo-initializer", order = "1", author = "a.yatskevich")
+@RequiredArgsConstructor
+public class LibraryInitializer {
+
+    private static final String BOOK_COLLECTION_NAME = "books";
+    private static final String COMMENT_COLLECTION_NAME = "comments";
+
+    private static final Genre GENRE_NOVEL;
+    private static final Genre GENRE_FANTASY;
+    private static final Comment COMMENT_FIRST_EUGENE_ONEGIN;
+    private static final Comment COMMENT_FIRST_THE_LORN_OF_THE_RINGS;
+    private static final Comment COMMENT_SECOND_THE_LORN_OF_THE_RINGS;
+    private static final Book BOOK_THE_THREE_MUSKETEERS;
+    private static final Book BOOK_EUGENE_ONEGIN;
+    private static final Book BOOK_THE_LORN_OF_THE_RINGS;
+
+    static {
+        GENRE_NOVEL = new Genre("Novel");
+        GENRE_FANTASY = new Genre("Fantasy");
+
+        COMMENT_FIRST_EUGENE_ONEGIN = new Comment("Just best Russian novel");
+        COMMENT_FIRST_THE_LORN_OF_THE_RINGS = new Comment("Tolkien - the genius");
+        COMMENT_SECOND_THE_LORN_OF_THE_RINGS = new Comment("I think this is not the best book by Tolkien");
+
+        BOOK_EUGENE_ONEGIN = new Book("Eugene Onegin",
+                new Author("A.S. Pushkin"),
+                GENRE_NOVEL, List.of(COMMENT_FIRST_EUGENE_ONEGIN));
+        BOOK_THE_THREE_MUSKETEERS = new Book("The three musketeers",
+                new Author("A. Dumas"),
+                GENRE_NOVEL);
+        BOOK_THE_LORN_OF_THE_RINGS = new Book("The lord of the rings",
+                new Author("J.R.R. Tolkien"),
+                GENRE_FANTASY, List.of(COMMENT_FIRST_THE_LORN_OF_THE_RINGS, COMMENT_SECOND_THE_LORN_OF_THE_RINGS));
+    }
+
+    private final MongoTemplate mongoTemplate;
+
+    @BeforeExecution
+    public void before() {
+        mongoTemplate.createCollection(BOOK_COLLECTION_NAME);
+        mongoTemplate.createCollection(COMMENT_COLLECTION_NAME);
+    }
+
+    @RollbackBeforeExecution
+    public void rollbackBefore() {
+        mongoTemplate.dropCollection(BOOK_COLLECTION_NAME);
+        mongoTemplate.dropCollection(COMMENT_COLLECTION_NAME);
+    }
+
+    @Execution
+    public void migrationMethod() {
+        mongoTemplate.save(COMMENT_FIRST_EUGENE_ONEGIN);
+        mongoTemplate.save(COMMENT_FIRST_THE_LORN_OF_THE_RINGS);
+        mongoTemplate.save(COMMENT_SECOND_THE_LORN_OF_THE_RINGS);
+        mongoTemplate.save(BOOK_THE_THREE_MUSKETEERS);
+        mongoTemplate.save(BOOK_EUGENE_ONEGIN);
+        mongoTemplate.save(BOOK_THE_LORN_OF_THE_RINGS);
+    }
+
+    @RollbackExecution
+    public void rollback() {
+        mongoTemplate.dropCollection(BOOK_COLLECTION_NAME);
+        mongoTemplate.dropCollection(COMMENT_COLLECTION_NAME);
+    }
+
+}
