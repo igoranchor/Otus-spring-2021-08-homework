@@ -11,17 +11,17 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataMongoTest
 class BookRepositoryTest {
 
     private static final String BOOK_COLLECTION_NAME = "books";
-    private static final String COMMENT_COLLECTION_NAME = "comments";
-
-    private static final String NON_EXISTS_BOOK_TITLE = "Non exists title";
-    private static final Comment EXISTS_COMMENT = new Comment("Tolkien - the genius")
-            .setId("comment_id");
-    private static final Comment NON_EXISTS_COMMENT = new Comment("Non exists comment");
+    private static final String AUTHOR_COLLECTION_NAME = "authors";
+    private static final String EXISTS_BOOK_TITLE = "The lord of the rings";
+    private static final String NON_EXISTS_BOOK_TITLE = "NON_EXISTS_BOOK_TITLE";
+    private static final Author EXISTS_AUTHOR_TOLKIEN = new Author("J.R.R. Tolkien");
+    private static final Author NON_EXISTS_AUTHOR = new Author("NON_EXISTS_AUTHOR");
 
     @Autowired
     private BookRepository bookRepository;
@@ -32,14 +32,14 @@ class BookRepositoryTest {
     @BeforeEach
     void prepare() {
         mongoTemplate.dropCollection(BOOK_COLLECTION_NAME);
-        mongoTemplate.dropCollection(COMMENT_COLLECTION_NAME);
+        mongoTemplate.dropCollection(AUTHOR_COLLECTION_NAME);
         mongoTemplate.createCollection(BOOK_COLLECTION_NAME);
-        mongoTemplate.createCollection(COMMENT_COLLECTION_NAME);
-        mongoTemplate.save(EXISTS_COMMENT);
-        mongoTemplate.save(new Book("The lord of the rings",
-                new Author("J.R.R. Tolkien"),
+        mongoTemplate.createCollection(AUTHOR_COLLECTION_NAME);
+        mongoTemplate.save(EXISTS_AUTHOR_TOLKIEN);
+        mongoTemplate.save(new Book(EXISTS_BOOK_TITLE,
+                EXISTS_AUTHOR_TOLKIEN,
                 new Genre("Fantasy"),
-                List.of(EXISTS_COMMENT)));
+                List.of(new Comment("Tolkien - the genius"))));
     }
 
     @Test
@@ -57,22 +57,21 @@ class BookRepositoryTest {
     }
 
     @Test
-    void findByCommentsContainingTestAndBookExists() {
+    void findByAuthorTestAndBookExists() {
         Book book = getExistsBook();
-        Book bookFromRepository = bookRepository.findByCommentsContaining(EXISTS_COMMENT)
-                .orElseThrow(() -> new RuntimeException("Book does not exists"));
-        assertEquals(book, bookFromRepository);
+        List<Book> booksFromRepository = bookRepository.findByAuthor(book.getAuthor());
+        assertEquals(1, booksFromRepository.size());
+        assertEquals(book, booksFromRepository.get(0));
     }
 
     @Test
-    void findByCommentsContainingTestAndBookDoesNotExist() {
-        Optional<Book> bookOptional = bookRepository.findByCommentsContaining(NON_EXISTS_COMMENT);
-        assertEquals(Optional.empty(), bookOptional);
+    void findByAuthorTestAndBookDoesNotExist() {
+        List<Book> booksFromRepository = bookRepository.findByAuthor(NON_EXISTS_AUTHOR);
+        assertTrue(booksFromRepository.isEmpty());
     }
 
     private Book getExistsBook() {
         return mongoTemplate.findAll(Book.class).get(0);
     }
-
 
 }

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.otus.library.component.InputOutputComponent;
 import ru.otus.library.domain.*;
 import ru.otus.library.repository.BookRepository;
+import ru.otus.library.service.AuthorService;
 import ru.otus.library.service.BookService;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Objects;
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
+    private final AuthorService authorService;
     private final InputOutputComponent component;
 
     @Override
@@ -24,7 +26,11 @@ public class BookServiceImpl implements BookService {
             component.write("Book \"" + title + "\" already exists. Return exists book.");
             return existsBook.get();
         } else {
-            var book = bookRepository.save(new Book(title, new Author(authorName), new Genre(genreName)));
+            var author = authorService.readByName(authorName);
+            if (Objects.isNull(author)) {
+                author = authorService.create(authorName);
+            }
+            var book = bookRepository.save(new Book(title, author, new Genre(genreName)));
             component.write("Book \"" + title + "\" successfully created.");
             return book;
         }
@@ -50,18 +56,21 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public List<Book> readByAuthor(Author author) {
+        var books = bookRepository.findByAuthor(author);
+        if (books.isEmpty()) {
+            component.write("Books by author \"" + author.getName() + "\" are not found");
+        }
+        return books;
+    }
+
+    @Override
     public Book updateById(String id, String newTitle, String authorName, String genreName) {
         var existsBook = readById(id);
         if (Objects.nonNull(existsBook)) {
-            if (!existsBook.getTitle().equals(newTitle)) {
-                existsBook.setTitle(newTitle);
-            }
-            if (!existsBook.getAuthor().getName().equals(authorName)) {
-                existsBook.setAuthor(new Author(authorName));
-            }
-            if (!existsBook.getGenre().getName().equals(genreName)) {
-                existsBook.setGenre(new Genre(genreName));
-            }
+            existsBook.setTitle(newTitle);
+            existsBook.setAuthor(authorName == null ? existsBook.getAuthor() : authorService.create(authorName));
+            existsBook.setGenre(genreName == null ? existsBook.getGenre() : new Genre(genreName));
             return bookRepository.save(existsBook);
         } else {
             return null;
@@ -79,7 +88,16 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    public Book readById(String id) {
+    @Override
+    public void deleteByAuthorId(String authorId) {
+        var author = authorService.readById(authorId);
+        var books = bookRepository.findByAuthor(author);
+        for (Book book : books) {
+            deleteById(book.getId());
+        }
+    }
+
+    private Book readById(String id) {
         var existsBook = bookRepository.findById(id);
         if (existsBook.isEmpty()) {
             component.write("Book with ID \"" + id + "\" does not exist.");

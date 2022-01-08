@@ -1,7 +1,9 @@
 package ru.otus.library.domain;
 
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -10,20 +12,20 @@ import java.util.UUID;
 
 @Data
 @Document(collection = "books")
-@ToString(exclude = "comments")
 @NoArgsConstructor
 public class Book {
 
     @Id
     private String id = UUID.randomUUID().toString();
 
+    @Indexed(unique = true)
     private String title;
 
+    @DBRef
     private Author author;
 
     private Genre genre;
 
-    @DBRef
     private List<Comment> comments;
 
     public Book(String title, Author author, Genre genre) {

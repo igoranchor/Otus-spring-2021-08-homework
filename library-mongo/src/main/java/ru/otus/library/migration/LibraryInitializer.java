@@ -11,9 +11,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LibraryInitializer {
 
+    private static final String AUTHOR_COLLECTION_NAME = "authors";
     private static final String BOOK_COLLECTION_NAME = "books";
-    private static final String COMMENT_COLLECTION_NAME = "comments";
-
+    private static final Author AUTHOR_PUSHKIN;
+    private static final Author AUTHOR_DUMAS;
+    private static final Author AUTHOR_TOLKIEN;
     private static final Genre GENRE_NOVEL;
     private static final Genre GENRE_FANTASY;
     private static final Comment COMMENT_FIRST_EUGENE_ONEGIN;
@@ -24,6 +26,10 @@ public class LibraryInitializer {
     private static final Book BOOK_THE_LORN_OF_THE_RINGS;
 
     static {
+        AUTHOR_PUSHKIN = new Author("A.S. Pushkin");
+        AUTHOR_DUMAS = new Author("A. Dumas");
+        AUTHOR_TOLKIEN = new Author("J.R.R. Tolkien");
+
         GENRE_NOVEL = new Genre("Novel");
         GENRE_FANTASY = new Genre("Fantasy");
 
@@ -32,35 +38,28 @@ public class LibraryInitializer {
         COMMENT_SECOND_THE_LORN_OF_THE_RINGS = new Comment("I think this is not the best book by Tolkien");
 
         BOOK_EUGENE_ONEGIN = new Book("Eugene Onegin",
-                new Author("A.S. Pushkin"),
-                GENRE_NOVEL, List.of(COMMENT_FIRST_EUGENE_ONEGIN));
+                AUTHOR_PUSHKIN, GENRE_NOVEL,
+                List.of(COMMENT_FIRST_EUGENE_ONEGIN));
         BOOK_THE_THREE_MUSKETEERS = new Book("The three musketeers",
-                new Author("A. Dumas"),
-                GENRE_NOVEL);
+                AUTHOR_DUMAS, GENRE_NOVEL);
         BOOK_THE_LORN_OF_THE_RINGS = new Book("The lord of the rings",
-                new Author("J.R.R. Tolkien"),
-                GENRE_FANTASY, List.of(COMMENT_FIRST_THE_LORN_OF_THE_RINGS, COMMENT_SECOND_THE_LORN_OF_THE_RINGS));
+                AUTHOR_TOLKIEN, GENRE_FANTASY,
+                List.of(COMMENT_FIRST_THE_LORN_OF_THE_RINGS, COMMENT_SECOND_THE_LORN_OF_THE_RINGS));
     }
 
     private final MongoTemplate mongoTemplate;
 
-    @BeforeExecution
-    public void before() {
-        mongoTemplate.createCollection(BOOK_COLLECTION_NAME);
-        mongoTemplate.createCollection(COMMENT_COLLECTION_NAME);
-    }
-
     @RollbackBeforeExecution
     public void rollbackBefore() {
+        mongoTemplate.dropCollection(AUTHOR_COLLECTION_NAME);
         mongoTemplate.dropCollection(BOOK_COLLECTION_NAME);
-        mongoTemplate.dropCollection(COMMENT_COLLECTION_NAME);
     }
 
     @Execution
     public void migrationMethod() {
-        mongoTemplate.save(COMMENT_FIRST_EUGENE_ONEGIN);
-        mongoTemplate.save(COMMENT_FIRST_THE_LORN_OF_THE_RINGS);
-        mongoTemplate.save(COMMENT_SECOND_THE_LORN_OF_THE_RINGS);
+        mongoTemplate.save(AUTHOR_PUSHKIN);
+        mongoTemplate.save(AUTHOR_DUMAS);
+        mongoTemplate.save(AUTHOR_TOLKIEN);
         mongoTemplate.save(BOOK_THE_THREE_MUSKETEERS);
         mongoTemplate.save(BOOK_EUGENE_ONEGIN);
         mongoTemplate.save(BOOK_THE_LORN_OF_THE_RINGS);
@@ -68,8 +67,8 @@ public class LibraryInitializer {
 
     @RollbackExecution
     public void rollback() {
+        mongoTemplate.dropCollection(AUTHOR_COLLECTION_NAME);
         mongoTemplate.dropCollection(BOOK_COLLECTION_NAME);
-        mongoTemplate.dropCollection(COMMENT_COLLECTION_NAME);
     }
 
 }
