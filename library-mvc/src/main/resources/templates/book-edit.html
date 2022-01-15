@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Book</title>
+    <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" rel="stylesheet">
+<body>
+<div class="container mt-5">
+    <h1 class="h1" th:if="${book.id}">Book</h1>
+    <form action="#" method="post" th:action="@{/book/add}" th:object="${book}">
+        <input th:field="*{id}" type="hidden">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input class="form-control" id="title" th:field="*{title}" type="text">
+        </div>
+        <!--        <div class="form-group">-->
+        <!--            <label for="authorName">Author name</label>-->
+        <!--            <input class="form-control" id="authorName" th:field="*{author.name}" type="text">-->
+        <!--        </div>-->
+        <div class="form-group">
+            <label for="authorNameSelect">Author name</label>
+            <select th:field="*{author.id}" class="form-control" id="authorNameSelect">
+
+                <option th:each="author : ${authors}"
+                        th:value="${author.id}"
+                        th:text="${author.name}"></option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="genreName">Genre</label>
+            <input class="form-control" id="genreName" th:field="*{genre.name}" type="text">
+        </div>
+
+        <button>Save</button>
+    </form>
+
+</div>
+
+
+<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+<script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+<script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+</body>
+
+</html>

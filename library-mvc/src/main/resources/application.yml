@@ -1,0 +1,17 @@
+logging:
+  level:
+    org.mongodb: INFO
+spring:
+  application:
+    name: library-mvc
+  data:
+    mongodb:
+      authentication-database: admin
+      host: localhost
+      port: 27017
+      username: library
+      password: library
+      database: library
+mongock:
+  migration-scan-package:
+    - ru.otus.library.migration
