@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: library-mongo
+  data:
+    mongodb:
+      database: library
+mongock:
+  migration-scan-package:
+    - ru.otus.library.migration
