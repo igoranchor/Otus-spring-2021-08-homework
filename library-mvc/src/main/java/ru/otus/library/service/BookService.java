@@ -8,6 +8,8 @@ public interface BookService {
 
     List<Book> readAll();
 
+    Book readById(String id);
+
     List<Book> readByAuthor(Author author);
 
     void delete(Book book);

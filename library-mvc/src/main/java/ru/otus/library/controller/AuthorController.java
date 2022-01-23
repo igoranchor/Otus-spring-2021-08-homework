@@ -49,8 +49,9 @@ public class AuthorController {
         return "redirect:/";
     }
 
-    @GetMapping("/view/{author}")
-    public String showAuthor(@PathVariable Author author, Model model) {
+    @GetMapping("/view/{author-id}")
+    public String showAuthor(@PathVariable("author-id") String authorId, Model model) {
+        Author author = authorService.readById(authorId);
         model.addAttribute("author", author);
         model.addAttribute("books", bookService.readByAuthor(author));
         return "books";

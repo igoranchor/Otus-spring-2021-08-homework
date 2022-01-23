@@ -53,8 +53,9 @@ public class BookController {
         return "redirect:/";
     }
 
-    @GetMapping("/view/{book}")
-    public String showBook(@PathVariable Book book, Model model) {
+    @GetMapping("/view/{book-id}")
+    public String showBook(@PathVariable("book-id") String bookId, Model model) {
+        Book book = bookService.readById(bookId);
         model.addAttribute("book", book);
         return "book-view";
     }

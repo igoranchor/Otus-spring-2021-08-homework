@@ -28,6 +28,16 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    public Book readById(String id) {
+        var existsBook = bookRepository.findById(id);
+        if (existsBook.isEmpty()) {
+            System.out.println("Book with ID \"" + id + "\" does not exist.");
+            return null;
+        }
+        return existsBook.get();
+    }
+
+    @Override
     public List<Book> readByAuthor(Author author) {
         var books = bookRepository.findByAuthor(author);
         if (books.isEmpty()) {
