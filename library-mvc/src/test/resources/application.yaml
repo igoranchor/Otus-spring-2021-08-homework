@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: library-mvc
+  data:
+    mongodb:
+      database: library
+  mongodb.embedded.version: 3.5.5
+
+mongock:
+  migration-scan-package:
+    - ru.otus.library.migration

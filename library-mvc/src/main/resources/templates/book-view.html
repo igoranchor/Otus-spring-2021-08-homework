@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>View book</title>
+    <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" rel="stylesheet">
+<body>
+<div class="container mt-5">
+    <h1 class="h1">View book</h1>
+    <h3 class="h3" th:text="${book.title}">Title</h3>
+    <h3 class="h3" th:text="${book.author.name}">Author</h3>
+    <h3 class="h3" th:text="${book.genre.name}">Genre</h3>
+    <table class="table">
+        <thead class="thead-light">
+        <tr>
+            <th>#</th>
+            <th>Text</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="comment,itemStat : ${book.comments}">
+            <td th:text="${itemStat.index}+1"></td>
+            <td th:text="${comment.text}"></td>
+            <td>
+                <form method="post"
+                      th:action="@{/book/delete-comment/__${book.id}__/__${comment.id}__}">
+                    <button class="btn btn-secondary btn-sm">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <a class="btn btn-primary" th:href="@{/book/create-comment/__${book.id}__}">Add new comment</a>
+    </br>
+    <a href="/book/">Back to all books</a>
+    </br>
+    <a th:href="@{/author/view/{id}(id=${book.author.id})}" th:text="'Back to books by ' + ${book.author.name}">Back to
+        author books</a>
+
+</div>
+
+
+<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+<script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+<script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+</body>
+
+</html>
